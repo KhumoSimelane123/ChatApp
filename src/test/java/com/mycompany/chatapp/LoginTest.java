@@ -36,6 +36,24 @@ public void testUserNameSixCharactersWithUnderscore() {
     // Boundary case: 6 characters (one over the limit), contains underscore - should fail
     assertFalse(login.checkUserName("ab_def"));
 }
+@Test
+public void testUserNameNullInput() {
+    Login login = new Login();
+    // Defensive check: a null username should not crash, just fail validation
+    assertFalse(login.checkUserName(null));
+}
+
+@Test
+public void testPasswordNullInput() {
+    Login login = new Login();
+    assertFalse(login.checkPasswordComplexity(null));
+}
+
+@Test
+public void testCellPhoneNumberNullInput() {
+    Login login = new Login();
+    assertFalse(login.checkCellPhoneNumber(null));
+}
     @Test
     public void testUserNameIncorrectlyFormatted() {
         Login login = new Login();
