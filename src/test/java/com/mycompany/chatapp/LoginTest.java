@@ -22,7 +22,20 @@ public class LoginTest {
         // Test Data: "kyl_1" -> contains underscore, 5 characters long
         assertTrue(login.checkUserName("kyl_1"));
     }
+    
+    @Test
+public void testUserNameExactlyFiveCharactersWithUnderscore() {
+    Login login = new Login();
+    // Boundary case: exactly 5 characters, contains underscore - should pass
+    assertTrue(login.checkUserName("ab_de"));
+}
 
+@Test
+public void testUserNameSixCharactersWithUnderscore() {
+    Login login = new Login();
+    // Boundary case: 6 characters (one over the limit), contains underscore - should fail
+    assertFalse(login.checkUserName("ab_def"));
+}
     @Test
     public void testUserNameIncorrectlyFormatted() {
         Login login = new Login();
