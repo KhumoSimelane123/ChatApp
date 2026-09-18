@@ -114,6 +114,12 @@ public class Login {
         } else if (!checkCellPhoneNumber(cellPhoneNumber)) {
             result = "Cell phone number is incorrectly formatted or does not contain an "
                    + "international code; please correct the number and try again.";
+            
+            } else if (firstName == null || firstName.trim().isEmpty()
+             || lastName == null || lastName.trim().isEmpty()) {
+           result = "First name and last name are required; please provide both to "
+           + "complete registration.";
+
         } else {
             // All checks passed - store the details for later login
             this.username = username;
