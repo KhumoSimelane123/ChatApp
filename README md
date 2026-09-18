@@ -1,0 +1,38 @@
+ ChatApp
+
+A console-based Java application built for the Programming 1A PoE (PROG5121).
+Part 1 implements a user registration and login feature.
+
+ Features
+
+- Username validation - must contain an underscore and be no more than
+  five characters long.
+- Password complexity validation- must be at least eight characters
+  long and contain a capital letter, a number, and a special character.
+- South African cell phone number validation** — must contain the
+  international country code (+27) followed by the number, validated
+  using a regular expression.
+- Login authentication - verifies entered credentials against the
+  details captured at registration.
+
+ Project Structure
+
+- Login.java - contains all validation and authentication logic
+  (checkUserName, checkPasswordComplexity, checkCellPhoneNumber,
+  registerUser, loginUser, returnLoginStatus).
+- ChatApp.java - console entry point that collects user input and
+  drives the registration and login flow.
+- LoginTest.java - JUnit tests covering both the individual validation
+  methods and the full registration/login message flow, using the exact
+  test data provided in the assignment brief.
+
+ Testing
+
+All validation logic is unit tested with JUnit 5. Tests cover both
+assertTrue/assertFalse checks on the boolean validation methods, and
+assertEquals checks on the exact message strings returned by
+registerUser() and returnLoginStatus().
+
+ Author
+
+Sibonelesihle Khumo Simelane
