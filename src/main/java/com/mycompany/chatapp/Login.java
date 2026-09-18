@@ -87,6 +87,7 @@ public class Login {
             result = false;
         } else {
             // Matches "+27" followed by 7 to 10 digits, nothing else
+               // Regex pattern adapted from a South African mobile number pattern on regex101.com (Zalatos, no date). Available at: https://regex101.com/library/lG6iA8
             String regex = "^\\+27[0-9]{7,10}$";
             Pattern pattern = Pattern.compile(regex);
             Matcher matcher = pattern.matcher(cellPhoneNumber);
