@@ -8,7 +8,7 @@ public class ChatApp {
         Scanner scanner = new Scanner(System.in);
         Login login = new Login();
 
-        // ---------------- Registration ----------------
+        // Registration 
         System.out.println("=== Registration ===");
 
         System.out.print("Enter a username: ");
@@ -36,7 +36,7 @@ public class ChatApp {
             return;
         }
 
-        // ---------------- Login ----------------
+        //  Login 
         System.out.println("\n=== Login ===");
 
         System.out.print("Enter your username: ");
@@ -54,7 +54,7 @@ public class ChatApp {
             return;
         }
 
-        // ---------------- Part 2: Sending Messages ----------------
+        
         System.out.println("\nWelcome to QuickChat.");
 
         System.out.print("How many messages would you like to send this session? ");
