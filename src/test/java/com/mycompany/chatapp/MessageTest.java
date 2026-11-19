@@ -3,7 +3,6 @@ package com.mycompany.chatapp;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import org.junit.jupiter.api.AfterEach;
@@ -19,13 +18,13 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 public class MessageTest {
 
-    // Part 2 test data
+    //  Part 2 test data 
     private static final String RECIPIENT_1 = "+27718693002";
     private static final String MESSAGE_1 = "Hi Mike, can you join us for dinner tonight?";
     private static final String RECIPIENT_2 = "08575975889";
     private static final String MESSAGE_2 = "Hi Keegan, did you receive the payment?";
 
-    // Part 3 test data (Test Data Messages 1 to 5)
+    // Part 3 test data (Test Data Messages 1 to 5) 
     private static final String P3_RECIPIENT_1 = "+27834557896";
     private static final String P3_MESSAGE_1 = "Did you get the cake?";
     private static final String P3_RECIPIENT_2 = "+27838884567";
@@ -74,10 +73,9 @@ public class MessageTest {
         new Message("0456789012", P3_RECIPIENT_5, P3_MESSAGE_5, 4).sentMessage(3);
     }
 
-    
+   
     // PART 2 TESTS
     
-
     @Test
     public void testMessageLengthSuccess() {
         Message message = new Message(RECIPIENT_1, MESSAGE_1, 0);
@@ -191,8 +189,9 @@ public class MessageTest {
     public void testSearchForMessageID() {
         loadPart3TestData();
 
-        Message found = Message.searchByMessageID("0838884567");
-        assertEquals("It is dinner time!", found.getMessageText());
+        String[] found = Message.searchByMessageID("0838884567");
+        assertEquals("It is dinner time!", found[1]);
+        assertEquals("0838884567", found[0]);
     }
 
     @Test
@@ -206,15 +205,24 @@ public class MessageTest {
     public void testSearchAllMessagesForRecipient() {
         loadPart3TestData();
 
-        List<String> texts = new ArrayList<>();
-        for (Message m : Message.searchByRecipient("+27838884567")) {
-            texts.add(m.getMessageText());
-        }
-
         List<String> expected = Arrays.asList(
                 "Where are you? You are late! I have asked you to be on time.",
                 "Ok, I am leaving without you.");
-        assertEquals(expected, texts);
+        assertEquals(expected, Message.searchByRecipient("+27838884567"));
+    }
+
+    // After a delete the arrays must still line up (parallel arrays)
+    @Test
+    public void testParallelArraysStayAlignedAfterDelete() {
+        loadPart3TestData();
+
+        Message.deleteByMessageHash(message2.getMessageHash());
+
+        // Message 5 moved to position 0; its ID must still give ITS recipient and text
+        String[] found = Message.searchByMessageID("0456789012");
+        assertEquals("+27838884567", found[0]);
+        assertEquals("Ok, I am leaving without you.", found[1]);
+        assertEquals("Ok, I am leaving without you.", Message.displayLongestMessage());
     }
 
     @Test
