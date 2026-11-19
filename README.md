@@ -25,7 +25,7 @@ After a successful login the user sees "Welcome to QuickChat." and chooses how m
    - delete a message using its message hash
    - display a report of all stored messages
 
-The program keeps arrays of sent messages, disregarded messages, stored messages, message hashes and message IDs. Stored messages are saved to `storedMessages.json` as a JSON array (using the Gson library) and are read back into the stored messages array when the program starts.
+The program keeps parallel arrays (position 0 in each array is the same message) for sent, disregarded and stored messages, with message IDs, hashes, recipients and message text, plus arrays of all message hashes and message IDs. Stored messages are saved to `storedMessages.json` as a JSON array (using the Gson library) and are read back into the stored arrays when the program starts.
 
 ### Message class
 
@@ -43,7 +43,7 @@ The program keeps arrays of sent messages, disregarded messages, stored messages
 2. Run `ChatApp.java`.
 
 ## Tests
-JUnit 5 tests are in `LoginTest.java` (19 tests) and `MessageTest.java` (23 tests).
+JUnit 5 tests are in `LoginTest.java` (19 tests) and `MessageTest.java` (24 tests).
 Run them with `mvn test` or right-click the project and choose Test.
 
 ## Continuous Integration
