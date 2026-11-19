@@ -14,7 +14,7 @@ public class ChatApp {
     public static void main(String[] args) {
         Login login = new Login();
 
-        // ---------------- Registration ----------------
+        // Registration
         System.out.println("=== Registration ===");
 
         System.out.print("Enter a username: ");
@@ -42,7 +42,7 @@ public class ChatApp {
             return;
         }
 
-        // Login 
+        //  Login 
         System.out.println("\n=== Login ===");
 
         System.out.print("Enter your username: ");
@@ -60,7 +60,7 @@ public class ChatApp {
             return;
         }
 
-        // QuickChat 
+        // QuickChat
         Message.setSender(firstName + " " + lastName);
         Message.loadStoredMessages();
 
@@ -166,7 +166,7 @@ public class ChatApp {
 
     
     // Option 4: Stored Messages menu (Part 3)
-    
+   
     private static void storedMessagesMenu() {
         boolean back = false;
 
@@ -190,25 +190,25 @@ public class ChatApp {
             } else if (choice == 3) {
                 System.out.print("Enter the message ID: ");
                 String id = scanner.nextLine().trim();
-                Message found = Message.searchByMessageID(id);
+                String[] found = Message.searchByMessageID(id);
 
                 if (found == null) {
                     System.out.println("Message ID not found.");
                 } else {
-                    System.out.println("Recipient: " + found.getRecipient());
-                    System.out.println("Message: " + found.getMessageText());
+                    System.out.println("Recipient: " + found[0]);
+                    System.out.println("Message: " + found[1]);
                 }
 
             } else if (choice == 4) {
                 System.out.print("Enter the recipient cell number: ");
                 String number = scanner.nextLine().trim();
-                List<Message> matches = Message.searchByRecipient(number);
+                List<String> matches = Message.searchByRecipient(number);
 
                 if (matches.isEmpty()) {
                     System.out.println("No messages found for that recipient.");
                 } else {
-                    for (Message m : matches) {
-                        System.out.println("Message: " + m.getMessageText());
+                    for (int i = 0; i < matches.size(); i++) {
+                        System.out.println("Message: " + matches.get(i));
                     }
                 }
 
@@ -226,10 +226,10 @@ public class ChatApp {
         }
     }
 
-    // ---------------------------------------------------------------
+    
     // Asks for a whole number between min and max, and asks again if the
     // user types letters or a number outside the range.
-    // ---------------------------------------------------------------
+    
     private static int readNumber(String prompt, int min, int max) {
         int value = 0;
         boolean valid = false;
