@@ -13,18 +13,19 @@ import java.util.Random;
 
 /**
  * Message.java
- 
-  Represents a single chat message. It validates, hashes, sends, disregards
-  and stores messages, and keeps the arrays used by the "Stored Messages"
-  menu in Part 3 of the ChatApp PoE.
- 
-  Reference (JSON reading and writing):
-  Google (n.d.) Gson: a Java library to convert Java objects into JSON and
-  back. Available at: https://github.com/google/gson [Accessed 17 November 2026].
+ *
+ * Represents a single chat message. It validates, hashes, sends, disregards
+ * and stores messages. The session data is kept in PARALLEL ARRAYS: for each
+ * kind of message (sent, disregarded, stored) the arrays line up, so position 0
+ * in every array describes the same message, position 1 the next, and so on.
+ *
+ * Reference (JSON reading and writing):
+ * Google (n.d.) Gson: a Java library to convert Java objects into JSON and
+ * back. Available at: https://github.com/google/gson [Accessed 17 November 2026].
  */
 public class Message {
 
-    // ---- Fields for THIS message ----
+    //  Fields for THIS message 
     private String messageID;
     private String sender;
     private String recipient;
@@ -32,17 +33,46 @@ public class Message {
     private String messageHash;
     private int messageNumber;
 
-    //  Arrays shared across ALL Message objects in the session 
-    private static List<Message> sentMessages = new ArrayList<>();
-    private static List<Message> disregardedMessages = new ArrayList<>();
-    private static List<Message> storedMessages = new ArrayList<>();
+    // PARALLEL ARRAYS (shared by the whole session)
+    
+
+    // Sent messages: index i of each array is the same message
+    private static List<String> sentMessages = new ArrayList<>();
+    private static List<String> sentRecipients = new ArrayList<>();
+    private static List<String> sentHashes = new ArrayList<>();
+    private static List<String> sentIDs = new ArrayList<>();
+
+    // Disregarded messages
+    private static List<String> disregardedMessages = new ArrayList<>();
+    private static List<String> disregardedRecipients = new ArrayList<>();
+    private static List<String> disregardedHashes = new ArrayList<>();
+    private static List<String> disregardedIDs = new ArrayList<>();
+
+    // Stored messages (read back from the JSON file at startup)
+    private static List<String> storedMessages = new ArrayList<>();
+    private static List<String> storedSenders = new ArrayList<>();
+    private static List<String> storedRecipients = new ArrayList<>();
+    private static List<String> storedHashes = new ArrayList<>();
+    private static List<String> storedIDs = new ArrayList<>();
+
+    // Every message hash and every message ID (sent, disregarded and stored)
     private static List<String> messageHashes = new ArrayList<>();
     private static List<String> messageIDs = new ArrayList<>();
+
     private static int totalMessagesSent = 0;
 
     // Who is sending the messages (set after login) and where JSON is saved
     private static String currentSender = "Developer";
     private static String storageFile = "storedMessages.json";
+
+    // Used only to write and read the JSON file
+    static class StoredRecord {
+        String messageID;
+        String sender;
+        String recipient;
+        String messageText;
+        String messageHash;
+    }
 
     public Message(String recipient, String messageText, int messageNumber) {
         this.messageID = generateMessageID();
@@ -78,9 +108,9 @@ public class Message {
         return padded.substring(padded.length() - 10);
     }
 
-   
-    // 1. checkMessageID(): message ID must be no more than ten characters
     
+    // 1. checkMessageID(): message ID must be no more than ten characters
+   
     public boolean checkMessageID(String messageID) {
         boolean result;
 
@@ -97,7 +127,7 @@ public class Message {
 
     
     // 2. checkRecipientCell(): same rule as Login.checkCellPhoneNumber()
-    
+   
     public String checkRecipientCell(String recipientCell) {
         String result;
         boolean isValid;
@@ -119,7 +149,7 @@ public class Message {
         return result;
     }
 
-   
+    
     // Message length check: must not exceed 250 characters
     
     public String checkMessageLength(String messageText) {
@@ -137,7 +167,7 @@ public class Message {
         return result;
     }
 
-   
+    
     // 3. createMessageHash()
     // First two digits of the ID : message number : first word + last word
     // in CAPS, e.g. "00:0:HITONIGHT"
@@ -164,18 +194,25 @@ public class Message {
     
     // 4. sentMessage(): the user picks a NUMBER
     //    1 = Send, 2 = Disregard, 3 = Store
-   
+    // Each choice adds this message to the matching set of parallel arrays.
+    
     public String sentMessage(int choice) {
         String result;
 
         if (choice == 1) {
-            sentMessages.add(this);
-            totalMessagesSent++;
+            sentMessages.add(messageText);
+            sentRecipients.add(recipient);
+            sentHashes.add(messageHash);
+            sentIDs.add(messageID);
             messageIDs.add(messageID);
             messageHashes.add(messageHash);
+            totalMessagesSent++;
             result = "Message successfully sent.";
         } else if (choice == 2) {
-            disregardedMessages.add(this);
+            disregardedMessages.add(messageText);
+            disregardedRecipients.add(recipient);
+            disregardedHashes.add(messageHash);
+            disregardedIDs.add(messageID);
             messageIDs.add(messageID);
             messageHashes.add(messageHash);
             result = "Press 0 to delete the message.";
@@ -191,20 +228,20 @@ public class Message {
         return result;
     }
 
-   
-    // 5. printMessages(): details of every message sent this session
     
+    // 5. printMessages(): details of every message sent this session
+   
     public static String printMessages() {
         StringBuilder sb = new StringBuilder();
 
         if (sentMessages.isEmpty()) {
             sb.append("No messages have been sent yet.");
         } else {
-            for (Message m : sentMessages) {
-                sb.append("Message ID: ").append(m.messageID).append("\n");
-                sb.append("Message Hash: ").append(m.messageHash).append("\n");
-                sb.append("Recipient: ").append(m.recipient).append("\n");
-                sb.append("Message: ").append(m.messageText).append("\n");
+            for (int i = 0; i < sentMessages.size(); i++) {
+                sb.append("Message ID: ").append(sentIDs.get(i)).append("\n");
+                sb.append("Message Hash: ").append(sentHashes.get(i)).append("\n");
+                sb.append("Recipient: ").append(sentRecipients.get(i)).append("\n");
+                sb.append("Message: ").append(sentMessages.get(i)).append("\n");
                 sb.append("----------------------------\n");
             }
         }
@@ -219,44 +256,75 @@ public class Message {
         return totalMessagesSent;
     }
 
-   
-    // 7. storeMessage(): custom method. Adds this message to the stored
-    // array, then writes the WHOLE array to the JSON file as a JSON array
-    // using Gson (see reference at the top of this file).
     
+    // 7. storeMessage(): custom method. Adds this message to the stored
+    // parallel arrays, then writes them to the JSON file as a JSON array
+    // using Gson (see reference at the top of this file).
+   
     private void storeMessage() {
-        storedMessages.add(this);
+        storedMessages.add(messageText);
+        storedSenders.add(sender);
+        storedRecipients.add(recipient);
+        storedHashes.add(messageHash);
+        storedIDs.add(messageID);
         saveStoredMessages();
     }
 
-    // Writes the stored messages array to the JSON file as one JSON array
+    // Writes the stored arrays to the JSON file as one JSON array
     private static void saveStoredMessages() {
+        List<StoredRecord> records = new ArrayList<>();
+
+        for (int i = 0; i < storedMessages.size(); i++) {
+            StoredRecord record = new StoredRecord();
+            record.messageID = storedIDs.get(i);
+            record.sender = storedSenders.get(i);
+            record.recipient = storedRecipients.get(i);
+            record.messageText = storedMessages.get(i);
+            record.messageHash = storedHashes.get(i);
+            records.add(record);
+        }
+
         Gson gson = new GsonBuilder().setPrettyPrinting().create();
 
         try (FileWriter writer = new FileWriter(storageFile)) {
-            gson.toJson(storedMessages, writer);
+            gson.toJson(records, writer);
         } catch (IOException e) {
             System.out.println("Could not store message: " + e.getMessage());
         }
     }
 
     
-    // Reads the JSON file back into the stored messages array
+    // Reads the JSON file back into the stored parallel arrays
     // (Part 3: "read the JSON file you stored into an array")
     
     public static void loadStoredMessages() {
+        // Remove any stored hashes and IDs from the "all" arrays first
+        for (int i = 0; i < storedHashes.size(); i++) {
+            messageHashes.remove(storedHashes.get(i));
+            messageIDs.remove(storedIDs.get(i));
+        }
+
         storedMessages.clear();
+        storedSenders.clear();
+        storedRecipients.clear();
+        storedHashes.clear();
+        storedIDs.clear();
+
         File file = new File(storageFile);
 
         if (file.exists()) {
             try (FileReader reader = new FileReader(file)) {
-                Message[] loaded = new Gson().fromJson(reader, Message[].class);
+                StoredRecord[] loaded = new Gson().fromJson(reader, StoredRecord[].class);
 
                 if (loaded != null) {
-                    for (Message m : loaded) {
-                        storedMessages.add(m);
-                        messageIDs.add(m.messageID);
-                        messageHashes.add(m.messageHash);
+                    for (StoredRecord record : loaded) {
+                        storedMessages.add(record.messageText);
+                        storedSenders.add(record.sender);
+                        storedRecipients.add(record.recipient);
+                        storedHashes.add(record.messageHash);
+                        storedIDs.add(record.messageID);
+                        messageHashes.add(record.messageHash);
+                        messageIDs.add(record.messageID);
                     }
                 }
             } catch (IOException | JsonParseException e) {
@@ -265,19 +333,13 @@ public class Message {
         }
     }
 
-    // ===============================================================
-    // PART 3: Stored Messages menu features
+   
+    // PART 3: Stored Messages menu features (all loop over the arrays)
     
 
     // The text of every message sent, in the order they were sent
     public static List<String> getSentMessageTexts() {
-        List<String> texts = new ArrayList<>();
-
-        for (Message m : sentMessages) {
-            texts.add(m.messageText);
-        }
-
-        return texts;
+        return new ArrayList<>(sentMessages);
     }
 
     // a. Sender and recipient of all stored messages
@@ -287,9 +349,9 @@ public class Message {
         if (storedMessages.isEmpty()) {
             sb.append("No stored messages.");
         } else {
-            for (Message m : storedMessages) {
-                sb.append("Sender: ").append(m.sender).append("\n");
-                sb.append("Recipient: ").append(m.recipient).append("\n");
+            for (int i = 0; i < storedMessages.size(); i++) {
+                sb.append("Sender: ").append(storedSenders.get(i)).append("\n");
+                sb.append("Recipient: ").append(storedRecipients.get(i)).append("\n");
                 sb.append("----------------------------\n");
             }
         }
@@ -297,44 +359,44 @@ public class Message {
         return sb.toString();
     }
 
-    // b. The longest stored message (compares lengths one by one)
+    // b. The longest stored message (compares the lengths in the array)
     public static String displayLongestMessage() {
         String result;
 
         if (storedMessages.isEmpty()) {
             result = "No stored messages.";
         } else {
-            Message longest = storedMessages.get(0);
+            int longestIndex = 0;
 
-            for (Message m : storedMessages) {
-                if (m.messageText.length() > longest.messageText.length()) {
-                    longest = m;
+            for (int i = 1; i < storedMessages.size(); i++) {
+                if (storedMessages.get(i).length() > storedMessages.get(longestIndex).length()) {
+                    longestIndex = i;
                 }
             }
 
-            result = longest.messageText;
+            result = storedMessages.get(longestIndex);
         }
 
         return result;
     }
 
-    // c. Search for a message ID. Returns the message, or null if not found.
-    public static Message searchByMessageID(String id) {
-        Message found = null;
+    // c. Search for a message ID. Returns {recipient, message}, or null if not found.
+    public static String[] searchByMessageID(String id) {
+        String[] found = null;
 
-        for (Message m : sentMessages) {
-            if (m.messageID.equals(id) && found == null) {
-                found = m;
+        for (int i = 0; i < sentIDs.size(); i++) {
+            if (sentIDs.get(i).equals(id) && found == null) {
+                found = new String[]{sentRecipients.get(i), sentMessages.get(i)};
             }
         }
-        for (Message m : storedMessages) {
-            if (m.messageID.equals(id) && found == null) {
-                found = m;
+        for (int i = 0; i < storedIDs.size(); i++) {
+            if (storedIDs.get(i).equals(id) && found == null) {
+                found = new String[]{storedRecipients.get(i), storedMessages.get(i)};
             }
         }
-        for (Message m : disregardedMessages) {
-            if (m.messageID.equals(id) && found == null) {
-                found = m;
+        for (int i = 0; i < disregardedIDs.size(); i++) {
+            if (disregardedIDs.get(i).equals(id) && found == null) {
+                found = new String[]{disregardedRecipients.get(i), disregardedMessages.get(i)};
             }
         }
 
@@ -342,40 +404,49 @@ public class Message {
     }
 
     // d. All messages (sent or stored) for one recipient
-    public static List<Message> searchByRecipient(String recipientNumber) {
-        List<Message> matches = new ArrayList<>();
+    public static List<String> searchByRecipient(String recipientNumber) {
+        List<String> matches = new ArrayList<>();
 
-        for (Message m : sentMessages) {
-            if (m.recipient.equals(recipientNumber)) {
-                matches.add(m);
+        for (int i = 0; i < sentRecipients.size(); i++) {
+            if (sentRecipients.get(i).equals(recipientNumber)) {
+                matches.add(sentMessages.get(i));
             }
         }
-        for (Message m : storedMessages) {
-            if (m.recipient.equals(recipientNumber)) {
-                matches.add(m);
+        for (int i = 0; i < storedRecipients.size(); i++) {
+            if (storedRecipients.get(i).equals(recipientNumber)) {
+                matches.add(storedMessages.get(i));
             }
         }
 
         return matches;
     }
 
-    // e. Delete a STORED message using its message hash
+    // e. Delete a STORED message using its message hash.
+    // The same position is removed from every stored array so they stay parallel.
     public static String deleteByMessageHash(String hash) {
         String result = "Message hash not found.";
-        Message toDelete = null;
+        int position = -1;
 
-        for (Message m : storedMessages) {
-            if (m.messageHash.equals(hash) && toDelete == null) {
-                toDelete = m;
+        for (int i = 0; i < storedHashes.size(); i++) {
+            if (storedHashes.get(i).equals(hash) && position == -1) {
+                position = i;
             }
         }
 
-        if (toDelete != null) {
-            storedMessages.remove(toDelete);
-            messageHashes.remove(toDelete.messageHash);
-            messageIDs.remove(toDelete.messageID);
+        if (position != -1) {
+            String deletedText = storedMessages.get(position);
+
+            messageHashes.remove(storedHashes.get(position));
+            messageIDs.remove(storedIDs.get(position));
+
+            storedMessages.remove(position);
+            storedSenders.remove(position);
+            storedRecipients.remove(position);
+            storedHashes.remove(position);
+            storedIDs.remove(position);
+
             saveStoredMessages();
-            result = "Message: \"" + toDelete.messageText + "\" successfully deleted.";
+            result = "Message: \"" + deletedText + "\" successfully deleted.";
         }
 
         return result;
@@ -388,10 +459,10 @@ public class Message {
         if (sentMessages.isEmpty()) {
             sb.append("No messages have been sent yet.");
         } else {
-            for (Message m : sentMessages) {
-                sb.append("Message Hash: ").append(m.messageHash).append("\n");
-                sb.append("Recipient: ").append(m.recipient).append("\n");
-                sb.append("Message: ").append(m.messageText).append("\n");
+            for (int i = 0; i < sentMessages.size(); i++) {
+                sb.append("Message Hash: ").append(sentHashes.get(i)).append("\n");
+                sb.append("Recipient: ").append(sentRecipients.get(i)).append("\n");
+                sb.append("Message: ").append(sentMessages.get(i)).append("\n");
                 sb.append("----------------------------\n");
             }
         }
@@ -406,12 +477,12 @@ public class Message {
         if (storedMessages.isEmpty()) {
             sb.append("No stored messages.");
         } else {
-            for (Message m : storedMessages) {
-                sb.append("Message ID: ").append(m.messageID).append("\n");
-                sb.append("Message Hash: ").append(m.messageHash).append("\n");
-                sb.append("Sender: ").append(m.sender).append("\n");
-                sb.append("Recipient: ").append(m.recipient).append("\n");
-                sb.append("Message: ").append(m.messageText).append("\n");
+            for (int i = 0; i < storedMessages.size(); i++) {
+                sb.append("Message ID: ").append(storedIDs.get(i)).append("\n");
+                sb.append("Message Hash: ").append(storedHashes.get(i)).append("\n");
+                sb.append("Sender: ").append(storedSenders.get(i)).append("\n");
+                sb.append("Recipient: ").append(storedRecipients.get(i)).append("\n");
+                sb.append("Message: ").append(storedMessages.get(i)).append("\n");
                 sb.append("----------------------------\n");
             }
         }
@@ -419,7 +490,7 @@ public class Message {
         return sb.toString();
     }
 
-    // ---- Helpers used by ChatApp and the unit tests ----
+    // Helpers used by ChatApp and the unit tests
     public static void setSender(String senderName) {
         currentSender = senderName;
     }
@@ -431,8 +502,21 @@ public class Message {
     // Empties every array so each unit test starts clean
     public static void clearAll() {
         sentMessages.clear();
+        sentRecipients.clear();
+        sentHashes.clear();
+        sentIDs.clear();
+
         disregardedMessages.clear();
+        disregardedRecipients.clear();
+        disregardedHashes.clear();
+        disregardedIDs.clear();
+
         storedMessages.clear();
+        storedSenders.clear();
+        storedRecipients.clear();
+        storedHashes.clear();
+        storedIDs.clear();
+
         messageHashes.clear();
         messageIDs.clear();
         totalMessagesSent = 0;
@@ -458,7 +542,7 @@ public class Message {
         return messageIDs.size();
     }
 
-    // ---- Getters, since fields are private ----
+    //  Getters, since fields are private
     public String getMessageID() {
         return messageID;
     }
